@@ -1,15 +1,5 @@
 version: '3'
 services:
-    nginx:
-        build: .
-        ports:
-            - "8080:80"
-        networks:
-            - frontback
-    apache:
-        image: httpd:latest
-        ports:
-            - "8081:80"
     traefik:
         image: traefik:v2.2
         command:
@@ -21,6 +11,31 @@ services:
             - "8082:8080"
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+        networks:
+            - frontback
+    whoami:
+        image: "traefik/whoami"
+        container_name: "simple-service"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+            - "traefik.http.routers.whoami.entrypoints=web"
+        networks:
+            - frontback
+    nginx:
+        build: .
+        ports:
+            - "8080:80"
+        networks:
+            - frontback
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.nginx.rule=Host(`nginx.localhost`)"
+            - "traefik.http.routers.nginx.entrypoints=web"
+    apache:
+        image: httpd:latest
+        ports:
+            - "8081:80"
     mysql:
         image: mysql:5.7
         environment:
